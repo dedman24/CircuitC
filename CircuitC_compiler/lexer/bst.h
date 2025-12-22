@@ -1,11 +1,6 @@
 #ifndef CIRCUITC_bst_included
 #define CIRCUITC_bst_included
 
-/* LICENSED UNDER GPL v3.0
- *
-*/
-
-
 #include "stdlib.h"             // dynamic memory ops
 #include "stdint.h"             // types
 #include "string.h"             // strcmp
