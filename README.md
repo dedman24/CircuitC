@@ -1,2 +1,5 @@
 # CircuitC
-compiler that compiles a custom, C-based language called "CircuitC" to an instance of the SATISFIABILITY problem
+CircuitC is an hardware-descriptor language based on C that is meant to describe circuits, that are then converted to instances of the NP-complete satisfiability problem.
+
+## WARNING
+As of today, CircuitC is still incomplete.
