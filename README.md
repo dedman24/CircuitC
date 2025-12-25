@@ -5,7 +5,16 @@ CircuitC code WILL BE (TODO: CHANGE) expressive enough to describe a simple RV64
 
 ### Why C?
 Because C is well-known, widely-used, well-defined (although CircuitC does stray from the C standard when convenient), it has been used as a hardware description language before (see: [Handel-C](https://en.wikipedia.org/wiki/Handel-C), which CircuitC is NOT based on).  
-I also generally like using C.
+I also generally like C.
 
 ## WARNING
 As of today, CircuitC is still incomplete.
+
+## ROADMAP
+ - lexer ~ complete
+ - interpreter
+     - error handling & everything the interpreter needs to do except interpreting 
+     - basic operations
+     - wires
+     - structs & complex data types
+     - enums & everything regarding pointers
