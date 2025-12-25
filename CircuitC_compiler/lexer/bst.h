@@ -1,15 +1,14 @@
 #ifndef CIRCUITC_bst_included
 #define CIRCUITC_bst_included
 
-#include "stdlib.h"             // dynamic memory ops
+#include "stdlib.h"             // dynamic memory operations
 #include "stdint.h"             // types
 #include "string.h"             // strcmp
-#include "stdlib.h"             // calloc
 
 // all I need is an opaque type that I can use to search for values, and from which I can get values.
 // more to it if it's fast, but CIRCUITC has very few keywords, so speed isn't that important.
 
-typedef uintptr_t CIRCUITC_value_t;
+typedef uint64_t CIRCUITC_value_t;
 
 typedef struct CIRCUITC_tree{
     struct CIRCUITC_tree* lt;
@@ -47,7 +46,7 @@ void CIRCUITC_tree_node_destroy(CIRCUITC_tree_t* node, CIRCUITC_tree_options_t f
 
 CIRCUITC_value_t CIRCUITC_tree_search(CIRCUITC_tree_t* tree, char* key, const size_t keylen, CIRCUITC_tree_error_code_t* error_code){
     int result;
-    while(result = strncmp(key, tree->key, keylen)){ 
+    while((result = strncmp(key, tree->key, keylen))){ 
         if(result < 0 && tree->lt) tree = tree->lt;
         else if(result > 0 && tree->gt) tree = tree->gt;
         else{
@@ -69,7 +68,7 @@ CIRCUITC_tree_t* CIRCUITC_tree_search_for_node(CIRCUITC_tree_t* tree, char* key,
     if(father) *father = NULL;
 
     int result;
-    while(result = strcmp(key, tree->key)){
+    while((result = strcmp(key, tree->key))){
         if(father){ *father = tree; *father_path = result; }
 
         if(result < 0 && tree->lt) tree = tree->lt;

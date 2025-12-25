@@ -18,24 +18,22 @@
 
 typedef uint8_t CIRCUITC_token_t;
 
+// DO NOT CHANGE THESE TOKENS UNLESS YOU KNOW WHAT YOU'RE DOING!
 #define CIRCUITC_TOKEN_WHITESPACE                   0x00U
-#define CIRCUITC_TOKEN_EOF                          0x01U
-#define CIRCUITC_TOKEN_NAME                         0x02U
-#define CIRCUITC_TOKEN_VALUE                        0x03U
-#define CIRCUITC_TOKEN_INCLUDE                      0x04U
+#define CIRCUITC_TOKEN_NEWLINE                      0x01U
+#define CIRCUITC_TOKEN_EOF                          0x02U
+#define CIRCUITC_TOKEN_NAME                         0x03U
+#define CIRCUITC_TOKEN_VALUE                        0x04U
+// you may change these if you want to add functionality to your language
+#define CIRCUITC_TOKEN_INCLUDE                      0x05U
 #define CIRCUITC_TOKEN_W                            0x10U           // width-less generic wire type
 
-#define CIRCUITC_TOKEN_METADATA_DUPLICATION         0x100U          // signals that, for a symbol x, xx is also another valid token, and thus one should check for xx too.
+// DO NOT CHANGE THESE TOKENS UNLESS YOU KNOW WHAT YOU'RE DOING!
+#define CIRCUITC_TOKEN_METADATA_EXTENDED         0x100U             // signals that, for a symbol x, xy is also another valid token, and thus one should check for it too.
 
 #define CIRCUITC_TOKEN_METADATA_MASK                0xFF
 #define CIRCUITC_TOKEN_METADATA_GET(tok)            ((tok)&~CIRCUITC_TOKEN_METADATA_MASK)
 
-#define CIRCUITC_COMMENT_ONELINE                    16U
-#define CIRCUITC_COMMENT_MULTILINE                  17U
-#define CIRCUITC_COMMENT_MASK                       0xF
-#define CIRCUITC_COMMENT_TYPE_SHIFT                 4
-#define CIRCUITC_COMMENT_TYPE_GET(tok)              ((tok)&~CIRCUITC_COMMENT_MASK)
-#define CIRCUITC_COMMENT_CLOSING_INDEX_GET(tok)     (CIRCUITC_comments_end[((tok)&CIRCUITC_COMMENT_MASK)])
 
 typedef struct{                                                     // struct used to define tokens
     char* symbol;
@@ -51,30 +49,30 @@ const CIRCUITC_token_definition_t CIRCUITC_keywords[] = {
 
 // all comment symbols
 // format is:
-// TYPE*4 || INDEX OF COMMENT END WITHIN CIRCUITC_comments_end
+// symbol that opens comment, index of symbol that closes comment in CIRCUITC_comments_end
 const CIRCUITC_token_definition_t CIRCUITC_comments_begin[] = {
-    {"//", CIRCUITC_COMMENT_ONELINE|0},                             // one-line comment opening symbol
-    {"/*", CIRCUITC_COMMENT_MULTILINE|1},                           // multi-line comment opening/closing symbol
+    {"//", 0},                                                      // one-line comment opening symbol
+    {"/*", 1},                                                      // multi-line comment opening/closing symbol
 };
 
 // closing comment symbols, counterparts of CIRCUITC_comments_begin
 // other than these, a valid comment closing symbol is \x00.
 // currently comments may only have one end per beginning (save for \x00 which closes all comment types)
-// thus all comments are treated as a section of string enclosed by a beginning character string and an ending character string, which the lexer skips over when met.
+// thus all comments are treated as a section of string enclosed by a beginning character string and an ending character string, which the lexer skips over when encountered.
 const char* CIRCUITC_comments_end[] = {
     "\n",                                                           // closing counterpart of // (that is, the comment symbol // is closed with \n)
-    "*/"                                                            // closing counterpart of */ (that is, the comment symbol /* is closed with */)
+    "*/"                                                            // closing counterpart of /- (that is, the comment symbol /* is closed with */)
 };
 
 // all whitespaces
 const CIRCUITC_token_definition_t CIRCUITC_whitespaces[] = {
     {" ",  CIRCUITC_TOKEN_WHITESPACE},                              // normal space
-    {"\n", CIRCUITC_TOKEN_WHITESPACE},                              // newline
+    {"\n", CIRCUITC_TOKEN_NEWLINE},                                 // newline, handled differently so that lexer knows what line an error occurs on
     {"\t", CIRCUITC_TOKEN_WHITESPACE},                              // horizontal tab
     {"\v", CIRCUITC_TOKEN_WHITESPACE},                              // vertical tab
     {"\r", CIRCUITC_TOKEN_WHITESPACE},                              // carriage return
     {"\f", CIRCUITC_TOKEN_WHITESPACE},                              // line feed
-    {"\x00", CIRCUITC_TOKEN_EOF}                                    // end of file/human-readable string 0x00
+    {"\x00", CIRCUITC_TOKEN_EOF}                                    // end of file/human-readable string 0x00. DO NOT CHANGE!
 };
 
 CIRCUITC_tree_t* CIRCUITC_token_init(const CIRCUITC_token_definition_t* definition, const uint64_t definition_size){
