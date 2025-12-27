@@ -25,7 +25,7 @@ typedef const uint32_t NOAHZK_op_t;
 
 #define NOAHZK_convert_from_bits_to_bytes(x) (((x)/BITS_IN_UINT8_T) + ((x)%BITS_IN_UINT8_T != 0))
 // gets section from variable; say variable is 0x01234567; NOAHZK_get_section_from_var(variable, UINT8_MAX, 0, uint8_t) will return a value of the same type as var holding 0x67
-#define NOAHZK_get_section_from_var(var, section_mask, section, section_type) ((section) < sizeof(var)/sizeof(section_type)? var >> (section)*(sizeof(var)*BITS_IN_UINT8_T) & section_mask: 0)
+#define NOAHZK_get_section_from_var(var, section_mask, section, section_type) ((section) < sizeof(var)/sizeof(section_type)? var >> (section)*sizeof(section_type)*BITS_IN_UINT8_T & section_mask: 0)
 
 #define NOAHZK_MAX(x, y) ((x) > (y)? (x): (y))
 #define NOAHZK_MIN(x, y) ((x) < (y)? (x): (y))
@@ -40,7 +40,7 @@ typedef const uint32_t NOAHZK_op_t;
 #define NOAHZK_GET_WIDTH_FROM_VAR_WIDTH_TYPE_INT(x) ((x)       *sizeof(NOAHZK_limb_t))
 #define NOAHZK_GET_WIDTH_FROM_VAR_WIDTH_TYPE_PTR_BITS(x) ((x)->width*BITS_IN_NOAHZK_LIMB)
 
-#define NOAHZK_variable_width_var_INITIALIZER {0, NULL}
+#define NOAHZK_variable_width_INITIALIZER {0, NULL}
 
 typedef struct{
     uint64_t width;

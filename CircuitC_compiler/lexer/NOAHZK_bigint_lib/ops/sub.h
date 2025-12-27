@@ -53,14 +53,53 @@ void NOAHZK_variable_width_sub(NOAHZK_variable_width_t* dst, NOAHZK_variable_wid
 
     for(uint64_t i = 0; i < dst->width; i++){
 // borrow goes into the 33rd bit, which can be extracted in constant-time assuming constant-time shifts
-        uint64_t z = (uint64_t)(i < rs0->width? rs0->arr[i]: 0) - (uint64_t)(i < rs1->width? rs1->arr[i]: 0) - borrow;
+        uint64_t z = (uint64_t)(i < rs0->width? rs0->arr[i]: 0) - (uint64_t)(i < rs1->width? rs1->arr[i]: 0) + borrow;
         dst->arr[i] = z & NOAHZK_LIMB_MAX;
-        borrow = z >> BITS_IN_NOAHZK_LIMB & 1;
+        borrow = z >> BITS_IN_NOAHZK_LIMB;
     }
 }
 
 void NOAHZK_variable_width_sub_constant(NOAHZK_variable_width_t* dst, NOAHZK_variable_width_t* rs0, const uint64_t k){
     NOAHZK_limb_t borrow = 0;
+
+    for(uint64_t i = 0; i < dst->width; i++){
+// borrow goes into the 33rd bit, which can be extracted in constant-time assuming constant-time shifts
+        uint64_t z = (uint64_t)(i < rs0->width? rs0->arr[i]: 0) - NOAHZK_get_section_from_var(k, NOAHZK_LIMB_MAX, i, NOAHZK_limb_t) - borrow;
+        dst->arr[i] = z & NOAHZK_LIMB_MAX;
+        borrow = z >> BITS_IN_NOAHZK_LIMB & 1;
+    }
+}
+
+// for sub ops where dst may have a size of 0, initialises dst's width to the width of the smallest src operand.
+void NOAHZK_variable_width_sub_and_resize(NOAHZK_variable_width_t* dst, NOAHZK_variable_width_t* rs0, NOAHZK_variable_width_t* rs1){
+    NOAHZK_limb_t borrow = 0;
+
+    const uint64_t largest_width = NOAHZK_MAX(rs0->width, rs1->width); 
+// expands dst to size of largest operand, initializing new space to 0 
+    if(dst->width < largest_width){
+        dst->arr = realloc(dst->arr, NOAHZK_GET_WIDTH_FROM_VAR_WIDTH_TYPE_INT(largest_width));
+        memset(dst->arr + dst->width, 0, NOAHZK_GET_WIDTH_FROM_VAR_WIDTH_TYPE_INT(largest_width - dst->width));
+        dst->width = largest_width;
+    }
+
+    for(uint64_t i = 0; i < dst->width; i++){
+// borrow goes into the 33rd bit, which can be extracted in constant-time assuming constant-time shifts
+        uint64_t z = (uint64_t)(i < rs0->width? rs0->arr[i]: 0) - (uint64_t)(i < rs1->width? rs1->arr[i]: 0) + borrow;
+        dst->arr[i] = z & NOAHZK_LIMB_MAX;
+        borrow = z >> BITS_IN_NOAHZK_LIMB;
+    }
+}
+
+void NOAHZK_variable_width_sub_and_resize_constant(NOAHZK_variable_width_t* dst, NOAHZK_variable_width_t* rs0, const uint64_t k){
+    NOAHZK_limb_t borrow = 0;
+
+    const uint64_t largest_width = NOAHZK_MAX(rs0->width, sizeof(k)/sizeof(*rs0->arr)); 
+// expands dst to size of largest operand, initializing new space to 0 
+    if(dst->width < largest_width){
+        dst->arr = realloc(dst->arr, NOAHZK_GET_WIDTH_FROM_VAR_WIDTH_TYPE_INT(largest_width));
+        memset(dst->arr + dst->width, 0, NOAHZK_GET_WIDTH_FROM_VAR_WIDTH_TYPE_INT(largest_width - dst->width));
+        dst->width = largest_width;
+    }
 
     for(uint64_t i = 0; i < dst->width; i++){
 // borrow goes into the 33rd bit, which can be extracted in constant-time assuming constant-time shifts
