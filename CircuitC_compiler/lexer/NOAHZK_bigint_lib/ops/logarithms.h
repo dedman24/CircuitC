@@ -38,11 +38,11 @@ uint64_t NOAHZK_min_bytecnt_var(const uint64_t value){
     return min_bitcnt/BITS_IN_UINT8_T + (min_bitcnt%BITS_IN_UINT8_T != 0);
 }
 
-uint64_t NOAHZK_variable_width_min_bitcnt_byte(void* real_value, uint64_t size){
+uint64_t NOAHZK_variable_width_min_bitcnt_byte(const void* const real_value, uint64_t size){
     uint64_t number_of_leading_zeroes = 0;
     uint8_t flag = 0;
 
-    uint8_t* value = real_value;
+    const uint8_t* const value = real_value;
 
 // exploits unsigned integer overflow so it iterates from top bit to last one
     for(uint64_t i = size - 1; i < size; i--){
@@ -59,16 +59,16 @@ uint64_t NOAHZK_variable_width_min_bitcnt_byte(void* real_value, uint64_t size){
     return size*BITS_IN_UINT8_T - number_of_leading_zeroes;
 }
 
-uint64_t NOAHZK_variable_width_min_bitcnt(NOAHZK_variable_width_t* value){
+uint64_t NOAHZK_variable_width_min_bitcnt(const NOAHZK_variable_width_t* const value){
     return NOAHZK_variable_width_min_bitcnt_byte(value->arr, NOAHZK_GET_WIDTH_FROM_VAR_WIDTH_TYPE_PTR(value));
 }
 
-uint64_t NOAHZK_variable_width_min_bytecnt_byte(void* real_value, uint64_t size){
+uint64_t NOAHZK_variable_width_min_bytecnt_byte(const void* const real_value, const uint64_t size){
     uint64_t min_bitcnt = NOAHZK_variable_width_min_bitcnt_byte(real_value, size);
     return min_bitcnt/BITS_IN_UINT8_T + (min_bitcnt%BITS_IN_UINT8_T != 0);
 }
 
-uint64_t NOAHZK_variarble_width_min_bytecnt(NOAHZK_variable_width_t* value){
+uint64_t NOAHZK_variarble_width_min_bytecnt(const NOAHZK_variable_width_t* const value){
     return NOAHZK_variable_width_min_bytecnt_byte(value->arr, NOAHZK_GET_WIDTH_FROM_VAR_WIDTH_TYPE_PTR(value));
 }
 

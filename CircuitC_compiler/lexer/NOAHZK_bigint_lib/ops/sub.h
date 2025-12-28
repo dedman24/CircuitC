@@ -13,7 +13,7 @@
 #include "stdint.h"         // integer types
 
 // dst = rs0 + or - (by virtue of op) rs1; constant-time regardless of op as long as add and sub take equal time in the CPU
-void NOAHZK_variable_width_add_or_sub(NOAHZK_variable_width_t* dst, NOAHZK_variable_width_t* rs0, NOAHZK_variable_width_t* rs1, const NOAHZK_op_t op){
+void NOAHZK_variable_width_add_or_sub(NOAHZK_variable_width_t* const dst, const NOAHZK_variable_width_t* const rs0, const NOAHZK_variable_width_t* const rs1, const NOAHZK_op_t op){
     NOAHZK_limb_t borrow = 0;
 
 // in LISP (used as pseudocode here), subtraction may be defined as (+ being addition, ~ being bitwise negation)
@@ -35,7 +35,7 @@ void NOAHZK_variable_width_add_or_sub(NOAHZK_variable_width_t* dst, NOAHZK_varia
 }
 
 // dst = rs0 + or - (by virtue of op) k; constant-time regardless of op as long as add and sub take equal time in the CPU
-void NOAHZK_variable_width_add_or_sub_constant(NOAHZK_variable_width_t* dst, NOAHZK_variable_width_t* rs0, const uint64_t k, NOAHZK_op_t op){
+void NOAHZK_variable_width_add_or_sub_constant(NOAHZK_variable_width_t* const dst, const NOAHZK_variable_width_t* const rs0, const uint64_t k, const NOAHZK_op_t op){
     NOAHZK_limb_t borrow = 0;
 
     for(uint64_t i = 0; i < dst->width; i++){
@@ -48,7 +48,7 @@ void NOAHZK_variable_width_add_or_sub_constant(NOAHZK_variable_width_t* dst, NOA
     }
 }
 
-void NOAHZK_variable_width_sub(NOAHZK_variable_width_t* dst, NOAHZK_variable_width_t* rs0, NOAHZK_variable_width_t* rs1){
+void NOAHZK_variable_width_sub(NOAHZK_variable_width_t* const dst, const NOAHZK_variable_width_t* const rs0, const NOAHZK_variable_width_t* const rs1){
     NOAHZK_limb_t borrow = 0;
 
     for(uint64_t i = 0; i < dst->width; i++){
@@ -59,7 +59,7 @@ void NOAHZK_variable_width_sub(NOAHZK_variable_width_t* dst, NOAHZK_variable_wid
     }
 }
 
-void NOAHZK_variable_width_sub_constant(NOAHZK_variable_width_t* dst, NOAHZK_variable_width_t* rs0, const uint64_t k){
+void NOAHZK_variable_width_sub_constant(NOAHZK_variable_width_t* const dst, const NOAHZK_variable_width_t* const rs0, const uint64_t k){
     NOAHZK_limb_t borrow = 0;
 
     for(uint64_t i = 0; i < dst->width; i++){
@@ -71,7 +71,7 @@ void NOAHZK_variable_width_sub_constant(NOAHZK_variable_width_t* dst, NOAHZK_var
 }
 
 // for sub ops where dst may have a size of 0, initialises dst's width to the width of the smallest src operand.
-void NOAHZK_variable_width_sub_and_resize(NOAHZK_variable_width_t* dst, NOAHZK_variable_width_t* rs0, NOAHZK_variable_width_t* rs1){
+void NOAHZK_variable_width_sub_and_resize(NOAHZK_variable_width_t* const dst, const NOAHZK_variable_width_t* const rs0, const NOAHZK_variable_width_t* const rs1){
     NOAHZK_limb_t borrow = 0;
 
     const uint64_t largest_width = NOAHZK_MAX(rs0->width, rs1->width); 
@@ -90,7 +90,7 @@ void NOAHZK_variable_width_sub_and_resize(NOAHZK_variable_width_t* dst, NOAHZK_v
     }
 }
 
-void NOAHZK_variable_width_sub_and_resize_constant(NOAHZK_variable_width_t* dst, NOAHZK_variable_width_t* rs0, const uint64_t k){
+void NOAHZK_variable_width_sub_and_resize_constant(NOAHZK_variable_width_t* const dst, const NOAHZK_variable_width_t* const rs0, const uint64_t k){
     NOAHZK_limb_t borrow = 0;
 
     const uint64_t largest_width = NOAHZK_MAX(rs0->width, sizeof(k)/sizeof(*rs0->arr)); 
@@ -109,8 +109,7 @@ void NOAHZK_variable_width_sub_and_resize_constant(NOAHZK_variable_width_t* dst,
     }
 }
 
-// compiles to constant-time code on any cpu with constant-time shifts.
-void NOAHZK_variable_width_neg_byte(void* real_dst, const void* real_src, const uint64_t width){
+void NOAHZK_variable_width_neg_byte(void* const real_dst, const void* const real_src, const uint64_t width){
     uint8_t carry = 1;
     uint8_t *dst = real_dst;
     const uint8_t *src = real_src;
@@ -123,7 +122,7 @@ void NOAHZK_variable_width_neg_byte(void* real_dst, const void* real_src, const 
     }
 }
 
-void NOAHZK_variable_width_sub_with_bit_offset_byte(void* real_dst, const void* real_rs0, const void* real_rs1, const uint64_t width0, const uint64_t width1, const uint64_t width_result, uint64_t bit_offset){
+void NOAHZK_variable_width_sub_with_bit_offset_byte(void* const real_dst, const void* const real_rs0, const void* const real_rs1, const uint64_t width0, const uint64_t width1, const uint64_t width_result, const uint64_t bit_offset){
     int8_t borrow = 0;
     uint8_t *dst = real_dst;
     const uint8_t *rs0 = real_rs0, *rs1 = real_rs1;
@@ -145,7 +144,7 @@ void NOAHZK_variable_width_sub_with_bit_offset_byte(void* real_dst, const void* 
 }
 
 // compiles to constant-time code on any cpu with constant-time shifts.
-void NOAHZK_variable_width_sub_byte(void* real_dst, const void* real_rs0, const void* real_rs1, const uint64_t width){
+void NOAHZK_variable_width_sub_byte(void* const real_dst, const void* const real_rs0, const void* const real_rs1, const uint64_t width){
     uint8_t borrow = 0;
     uint8_t *dst = real_dst;
     const uint8_t *rs0 = real_rs0, *rs1 = real_rs1;
@@ -159,7 +158,7 @@ void NOAHZK_variable_width_sub_byte(void* real_dst, const void* real_rs0, const 
 }
 
 // compiles to constant-time code on any cpu with constant-time shifts.
-void NOAHZK_variable_width_sub_constant_byte(void* real_dst, const void* real_rs0, const uint64_t k, const uint64_t width){
+void NOAHZK_variable_width_sub_constant_byte(void* const real_dst, const void* const real_rs0, const uint64_t k, const uint64_t width){
     uint8_t borrow = 0;
     uint8_t *dst = real_dst;
     const uint8_t *rs0 = real_rs0;
@@ -173,7 +172,7 @@ void NOAHZK_variable_width_sub_constant_byte(void* real_dst, const void* real_rs
 }
 
 // compiles to constant-time code on any cpu with constant-time shifts.
-void NOAHZK_variable_width_both_sub_byte(void* real_dst, const void* real_rs0, const void* real_rs1, const uint64_t width0, const uint64_t width1, const uint64_t width_result){
+void NOAHZK_variable_width_both_sub_byte(void* const real_dst, const void* const real_rs0, const void* const real_rs1, const uint64_t width0, const uint64_t width1, const uint64_t width_result){
     uint8_t borrow = 0;
     uint8_t *dst = real_dst;
     const uint8_t *rs0 = real_rs0, *rs1 = real_rs1;
