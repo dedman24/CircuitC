@@ -6,7 +6,7 @@ May the Lord help me.\
 
 ## COMPILER ARCHITECTURE
 Preprocessing and code generation to bytecode happens in a single pass; this means the compiler does not generate any intermediate files in which it expands macros, or any AST, nor does it tokenise the source code (not anymore).\
-I did this because I thought it would be cool. I also didn't need an AST or any intermediate result file (so far, might change since we're still so early on in the development).
+I did this because I thought it would be cool. I also didn't need an AST or any intermediate result file (so far, might change since I'm still so early on in the development).
 
 ## LANGUAGE ITSELF
 WIP.
