@@ -5,13 +5,14 @@
 #include "stdint.h"                                         // variable-width types
 #include "string.h"                                         // strstr
 #include "stdbool.h"                                        // boolean type
-#include "../tokens/tokens.h"                               // token type, tokens themselves
+#include "../ops/_primitives.h"                             // VERB_tokeniser_not_whitespace.
+#include "../../tokens/tokens.h"                            // token type, tokens themselves
 #include "backend/variable_ops.h"                           // just so it's included down the line.
 #include "backend/compatibility.h"                          // just so it's included down the line.
 #include "../../libraries/scope.h"                          // scoping stuff
 #include "../../libraries/regex_stuff.h"                    // regex stuff
 #include "../preprocessor/preprocessor.h"                   // preprocessor functions
-#include "../../libraries/dynamic_arrays.h"                 // dynamic array type & ops
+#include "../../libraries/arrays/dynamic_arrays.h"          // dynamic array type & ops
 #include "../../libraries/trees/bytecode_tree.h"            // binary search tree type & ops
 
 #include "backend/backend.h"
@@ -29,14 +30,17 @@ VERB_tokeniser_t* VERB_tokeniser_init(VERB_tokeniser_t* tokeniser){
     tokeniser->code = VERB_array_dyn_init(NULL);
     tokeniser->preprocessor = VERB_preprocessor_init(NULL);
     tokeniser->backend = VERB_tokeniser_backend_init();
+    tokeniser->ops = VERB_array_init();
+    tokeniser->values = VERB_array_init();
 
     tokeniser->line   = 0;
     tokeniser->offset = 0;
+    tokeniser->bracket_depth = 0;
 // can be left uninitialised
 //    ctx->nameval_length = 0;
     tokeniser->old_whitespace_cnt = 0;
     tokeniser->new_whitespace_cnt = 0;
-    tokeniser->scope_state = VERB_tokeniser_scope_state_none;
+    tokeniser->state = VERB_tokeniser_state_none;
 
     return tokeniser;
 }
@@ -79,7 +83,7 @@ VERB_token_fun_t VERB_tokeniser_parse_statement(char* restrict* const restrict s
             *string += length;
             if(fun) return fun;
             tokeniser->nameval_length = length;
-            return VERB_tokens_op_name;
+            return VERB_bytecode_op_name;
         } 
     }
     {
@@ -94,7 +98,7 @@ VERB_token_fun_t VERB_tokeniser_parse_statement(char* restrict* const restrict s
         const size_t length = VERB_REGEX_numeric_length(*string);
         tokeniser->offset += length;
         tokeniser->nameval_length = length;
-        if(length) return VERB_tokens_op_value;
+        if(length) return VERB_bytecode_op_value;
     }
 // best to check all edge cases
     return NULL;
@@ -102,32 +106,43 @@ VERB_token_fun_t VERB_tokeniser_parse_statement(char* restrict* const restrict s
 
 // from string, sees if it can be converted to token, does so if possible, returns new string (advanced).
 // undefined value if token is not VERB_TOKEN_NAME or VERB_TOKEN_VALUE.
-VERB_variable_token_t VERB_token_get(char* restrict* const restrict string, VERB_tokeniser_t* const restrict tokeniser){
+void VERB_token_get(char* restrict* const restrict string, VERB_tokeniser_t* const restrict tokeniser){
 // do these HAVE to be called in this order? not really.
     VERB_token_fun_t fun;
-// checks whether preprocessor directive
-    if(**string == '#') return VERB_preprocessor_handle(string, VERB_REGEX_preprocessor_length(*string), tokeniser);
+// checks if it's a preprocessor directive or not.
+    if(**string == '#'){ 
+        *string += 1;
+        VERB_preprocessor_handle(string, VERB_REGEX_preprocessor_length(*string), tokeniser); 
+        return;
+    }
+    if(**string == '\n'){
+        *string += 1;
+        VERB_bytecode_op_newline(string, tokeniser);
+        return;
+    }
 // checks whether character is whitespace (all whitespaces are 1-char long ALWAYS)
     fun = VERB_tree_bytecode_search(tokeniser->whitespaces, *string, 1);
     if(fun){
         *string += 1; tokeniser->offset++;                              // properly handling offset is such a pain ;-;
-        return fun(string, tokeniser);
+        fun(string, tokeniser);
+        return;
     } 
 // checks whether character is comment (all comments are 2-char long)
     fun = VERB_tree_bytecode_search(tokeniser->comments, *string, 2);
     if(fun){
         *string += 1; tokeniser->offset++;
-        return fun(string, tokeniser);
+        fun(string, tokeniser);
+        return;
     } 
 // checks whether character is something else
     fun = VERB_tokeniser_parse_statement(string, tokeniser);
     if(fun){
-        VERB_tokens_op_non_whitespace_character(tokeniser);
-        return fun(string, tokeniser); 
+        VERB_tokeniser_not_whitespace(tokeniser);
+        fun(string, tokeniser); 
+        return;
     }
-// no token corresponds to what is written; error is returned.
-    VERB_error_report(tokeniser->specifics, VERB_error_invalid_statement, tokeniser->line, tokeniser->offset, 1, "STRING IS UNPARSABLE");
-    return VERB_TOKEN_special_IGNORE;
+// no token corresponds to what is written (file is formatted erroneously or corrupted); an error is returned.
+    VERB_error_report(tokeniser->specifics, VERB_error_invalid_statement, tokeniser->line, tokeniser->offset, 1, "STRING IS UNPARSEABLE");
 }
 
 #endif

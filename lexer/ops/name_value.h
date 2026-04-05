@@ -1,9 +1,9 @@
-#ifndef VERB_tokens_op_name_value_included
-#define VERB_tokens_op_name_value_included
+#ifndef VERB_bytecode_op_name_value_included
+#define VERB_bytecode_op_name_value_included
 
 #include "_includes.h"
-#include "../../libraries/dynamic_arrays.h"
 #include "../../libraries/value_conversion.h"
+#include "../../libraries/arrays/dynamic_arrays.h"
 #include "../../libraries/errors_warnings/errors_warnings.h"
 
 void VERB_put_name(VERB_array_t* const restrict array, char* restrict* restrict string, const size_t name_token_length, VERB_tokeniser_t* const restrict tokeniser){
@@ -33,17 +33,15 @@ void VERB_put_value(VERB_array_t* const restrict array, char* restrict* restrict
     *string += value_token_length; tokeniser->offset += value_token_length;
 }
 
+// TODO: FIX THESE!
 
-VERB_token_t VERB_tokens_op_name(char* restrict* const restrict string, VERB_tokeniser_t* const restrict tokeniser){
+void VERB_bytecode_op_name(char* restrict* const restrict string, VERB_tokeniser_t* const restrict tokeniser){
     VERB_bytecode_push(VERB_TOKEN_special_NAME, tokeniser->code);
     VERB_put_name(tokeniser->code, string, tokeniser->nameval_length, tokeniser);
-    return VERB_TOKEN_special_NAME;
 }
 
-VERB_token_t VERB_tokens_op_value(char* restrict* const restrict string, VERB_tokeniser_t* const restrict tokeniser){
-    VERB_bytecode_push(VERB_TOKEN_special_VALUE, tokeniser->code);
-    VERB_put_value(tokeniser->code, string, tokeniser->nameval_length, tokeniser);
-    return VERB_TOKEN_special_VALUE;
+void VERB_bytecode_op_value(char* restrict* const restrict string, VERB_tokeniser_t* const restrict tokeniser){
+    
 }
 
 #endif

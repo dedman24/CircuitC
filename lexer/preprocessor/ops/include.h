@@ -1,9 +1,9 @@
 #ifndef VERB_preprocessor_ops_include_included
 #define VERB_preprocessor_ops_include_included
 
-#include "define.h"
-#include "stdio.h"              // file ops
-#include "_includes.h"          // includes
+#include "stdio.h"              // file ops.
+#include "_includes.h"          // includes.
+#include "../../tokeniser/variables/_all_variables.h"
 
 // returns file size
 size_t VERB_fsize(FILE* const fd){
@@ -134,7 +134,7 @@ void VERB_preprocessor_op_include_tokenise_recursively(char* restrict* const res
         while(**string && **string != '\n') VERB_preprocessor_op_include_process_modules(string, tokeniser);
     }
 // lexes file, handles final eof.
-    while(*code) VERB_lexer_line(&code, tokeniser, false);
+    while(*code) VERB_lexer_line(&code, tokeniser, NULL);
     VERB_bytecode_op_eof(&code, tokeniser);
 // cleanup
     if(processModules) VERB_tree_boolean_destroy(tokeniser->preprocessor->modules, VERB_tree_keep_key);
@@ -146,11 +146,10 @@ void VERB_preprocessor_op_include_tokenise_recursively(char* restrict* const res
 const VERB_type_tok_t VERB_preprocessor_op_include__namespace_type_tok[] = {VERB_TYPE_type};
 const char* const restrict VERB_preprocessor_op_include__namespace_type_str = "type";
 
-
 // #include "..." as ... module ...
 // returns ptr to error struct if something goes wrong, NULL otherwise 
-VERB_bytecode_t VERB_preprocessor_op_include(char* restrict* const restrict string, VERB_tokeniser_t* const restrict tokeniser){
-    if(!VERB_preprocessor_op__check_for_whitespace(string, "#include", tokeniser)) return VERB_TOKEN_special_IGNORE;
+void VERB_preprocessor_op_include(char* restrict* const restrict string, VERB_tokeniser_t* const restrict tokeniser){
+    if(!VERB_preprocessor_op__check_for_whitespace(string, "#include", tokeniser)) return;
 
     if(**string != '"'){
         VERB_error_report(tokeniser->specifics, VERB_error_invalid_statement, tokeniser->line, tokeniser->offset, 0);
@@ -161,7 +160,7 @@ VERB_bytecode_t VERB_preprocessor_op_include(char* restrict* const restrict stri
         if(!pathname_end) pathname_end = *string +strlen(*string);
         tokeniser->offset += (size_t)(pathname_end - *string);
         *string = pathname_end;
-        return VERB_TOKEN_special_IGNORE;
+        return;
     }
 // TODO: MAKE THIS INTO SINGLE FUNCTION?
     *string += 1; tokeniser->offset += 1;
@@ -173,7 +172,7 @@ VERB_bytecode_t VERB_preprocessor_op_include(char* restrict* const restrict stri
     if(!pathname_length){
 // NO FILE NAMED...
         VERB_error_report(tokeniser->specifics, VERB_error_preprocessor_include_no_file, tokeniser->line, tokeniser->offset, 1, "IN #include STATEMENT AT ALL");
-        return VERB_TOKEN_special_IGNORE;
+        return;
     }
 // namespace under which to add op
     char* namespace;
@@ -194,11 +193,9 @@ VERB_bytecode_t VERB_preprocessor_op_include(char* restrict* const restrict stri
             strlen(VERB_preprocessor_op_include__namespace_type_str)
         );
 
-        VERB_variable_definition_init(&tokeniser->backend, namespace, namespace_len, namespace_type, namespace_data);
+        VERB_variable_definition_init(&tokeniser->backend, namespace, namespace_len, namespace_type, VERB_VARIABLE_TYPE, VERB_VARIABLE_FLAG_const, namespace_data, VERB_variable_type_destroy);
     } 
     VERB_tokeniser_backend_set_recently_added_rht(&tokeniser->backend, old);
-    
-    return VERB_BC_special_IGNORE;
 }
 
 #endif

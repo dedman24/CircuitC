@@ -3,21 +3,31 @@
 
 // includes
 
-#include "../../../libraries/errors_warnings/errors_warnings.h"     // error handling
-#include "../../tokeniser/backend/tokeniser_ctx.h"                  // VERB_tokeniser_t type 
-#include "../../../libraries/regex_stuff.h"                         // regex operations to check if 
-#include "../../../libraries/scope.h"                               // scope handling
-#include "../../tokens/tokens.h"                                    // token type
-#include "stddef.h"                                                 // size_t
-#include "stdint.h"                                                 // fixed-width types
-#include "string.h"                                                 // string operations
-#include "stdbool.h"
+#include "../../../libraries/errors_warnings/errors_warnings.h"     // error handling.
+#include "../../../libraries/arrays/dynamic_arrays.h"               // dynamic arrays.
+#include "../../tokeniser/backend/tokeniser_ctx.h"                  // VERB_tokeniser_t type. 
+#include "../../../libraries/regex_stuff.h"                         // regex operations to check if. 
+#include "../../../libraries/rhts/rht.h"                            // recursive hash table & ops.
+#include "../../../libraries/scope.h"                               // scope handling.
+#include "../../../tokens/tokens.h"                                 // token type.
+#include "stdbool.h"                                                // bool type.
+#include "stddef.h"                                                 // size_t.
+#include "stdint.h"                                                 // fixed-width types.
+#include "string.h"                                                 // string operations.
+
 
 // function primitives
-VERB_array_t* VERB_lexer_line(char* restrict*, VERB_tokeniser_t*, const bool);
+void VERB_lexer_line(char* restrict* const restrict, VERB_tokeniser_t* const restrict, const char* const restrict);
 
-// needed for #ifxxx, #elxxx statements
-VERB_token_t VERB_preprocessor_op_endif(char* restrict* const restrict string, VERB_tokeniser_t* const restrict tokeniser);
+// useful macros.
+
+#define VERB_preprocessor_op__skip_whitespaces(tokeniser, string)               \
+    do{                                                                         \
+        const size_t whitespaces = VERB_REGEX_statement_length(*(string));      \
+        *(string) += whitespaces; (tokeniser)->offset += whitespaces;           \
+    } while(0)
+
+#define VERB_preprocessor_op_skip_entry(x) { #x, strlen(#x) }
 
 // useful functions
 
@@ -57,33 +67,33 @@ bool VERB_preprocessor_op__decrease_nesting_depth(char* restrict* const restrict
     return false;
 }
 
-void VERB_preprocessor_op__skip_nested(VERB_preprocessor_strings_t* const restrict toincrease, const size_t icnt, VERB_preprocessor_strings_t* const restrict todecrease, const size_t dcnt, char* restrict* const restrict string, VERB_tokeniser_t* const restrict tokeniser){
+// skips over relevant todecrease string, returns ptr to end of it.
+char* VERB_preprocessor_op__skip_nested(VERB_preprocessor_strings_t* const restrict toincrease, const size_t icnt, VERB_preprocessor_strings_t* const restrict todecrease, const size_t dcnt, char* restrict* const restrict string, VERB_tokeniser_t* const restrict tokeniser){
 // initialised to 1 because we're 1 nested statement deep
     unsigned long long nesting_depth = 1;
 // not the most efficient way to search for given character sequences
+    char* exclusive = NULL;
     do{
-        size_t len = VERB_REGEX_statement_length(*string);
-        if(!len){ 
-// skips over string if it's a number
-            len = VERB_REGEX_numeric_length(*string);
-// skips over string if it's an operator    
-            if(!len) len = VERB_REGEX_operator_length(*string);
-            if(!len) len = VERB_REGEX_whitespace_length(*string);
-            if(!len) len = 1;
-        } 
-        else{
+        size_t len;
+        switch(**string){
+        case '#':
+            exclusive = *string;
+            *string += 1; tokeniser->offset += 1;
+            VERB_preprocessor_op__skip_whitespaces(tokeniser, string);
+            len = VERB_REGEX_statement_length(*string);
             if(VERB_preprocessor_op__increase_nesting_depth(string, len, toincrease, icnt)) nesting_depth++;
             else if(VERB_preprocessor_op__decrease_nesting_depth(string, len, todecrease, dcnt)) nesting_depth--; 
+            break;
+        case '\n':
+            *string += 1; VERB_bytecode_op_newline_proper_behaviour(tokeniser);
+        default:
+            len = strcspn(*string, "#\n");      // skips to next line or preprocessor directive.
+            break;
         }
-    
         *string += len; tokeniser->offset += len;
     } while(nesting_depth && **string);
-}
 
-#define VERB_preprocessor_op__skip_whitespaces(tokeniser, string)               \
-    do{                                                                         \
-        const size_t whitespaces = VERB_REGEX_statement_length(*(string));      \
-        *(string) += whitespaces; (tokeniser)->offset += whitespaces;           \
-    } while(0)
+    return exclusive;
+}
 
 #endif

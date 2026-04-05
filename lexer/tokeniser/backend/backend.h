@@ -2,8 +2,8 @@
 #define VERB_tokeniser_backend_included
 
 #include "stddef.h"                                         // size_t
-#include "../../tokens/token_type.h"                        // tokens
 #include "../../../libraries/scope.h"                       // scoping stuff
+#include "../../../tokens/token_type.h"                     // tokens
 
 // WARNING: this value must be large enough to represent ALL bytecodes defined in "lexer/tokens/token_type.h" along with all of the values it CAN represent.
 // it is recommended to not make this smaller than a uint32_t. DO NOT TOUCH IT!
@@ -35,7 +35,7 @@ VERB_variable_name_alloc_ctx VERB_variable_name_alloc_ctx_init(){
 }
 
 void VERB_variable_name_alloc_ctx_destroy(VERB_variable_name_alloc_ctx* ctx){
-    return;             // NOOP, exists for API needs in case some new 'naming scheme' is chosen.
+    return;             // NOOP, exists for API needs (abstracts interface).
 }
 
 #define VERB_variable_alloc(backend) ((backend)->alloc_ctx.var_start++)

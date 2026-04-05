@@ -6,24 +6,21 @@
 #include "../backend/backend.h"
 
 typedef enum{
-    VERB_VARIABLE_DEFINITION_TYPE,
-    VERB_VARIABLE_DEFINITION_ARITH,
-    VERB_VARIABLE_DEFINITION_PTR,
-    VERB_VARIABLE_DEFINITION_FUN,
-} VERB_variable_definition_groups_t;                        // major groups of types a variable can assume. 
+    VERB_VARIABLE_TYPE,
+    VERB_VARIABLE_ARITH,
+    VERB_VARIABLE_PTR,
+    VERB_VARIABLE_FUN,
+} VERB_variable__groups_t;                        // major groups of types a variable can assume. 
 
-// flags handled by compiler, moreso compiler hints/statements than data about the value itself.
 typedef enum{
-    VERB_VARIABLE_DEFINITION_FLAG_none                  = 0,
-    VERB_VARIABLE_DEFINITION_FLAG_mut                   = 1,
-    VERB_VARIABLE_DEFINITION_FLAG_mut_priv              = 2,
-    VERB_VARIABLE_DEFINITION_FLAG_mut_pub               = 3,
-    VERB_VARIABLE_DEFINITION_FLAG_inaccessible          = 4,
-    VERB_VARIABLE_DEFINITION_FLAG_priv                  = 8,
-    VERB_VARIABLE_DEFINITION_FLAG_volatile              = 16,
-    VERB_VARIABLE_DEFINITION_FLAG_static                = 32,
-    VERB_VARIABLE_DEFINITION_FLAG_strict                = 64
-} VERB_variable_definition_flags_t;
+    VERB_VARIABLE_FLAG_none                 = 0,
+    VERB_VARIABLE_FLAG_const                = 1,
+    VERB_VARIABLE_FLAG_lvalue               = 2,            // variable has an address/is referenceable.
+} VERB_variable__flags_t;
+
+#define VERB_VARIABLE_FLAG_ALL (VERB_VARIABLE_FLAG_const | VERB_VARIABLE_FLAG_lvalue)
+
+#define VERB_variable_definition_flags_combine(x, y) ((x) & (y))
 
 typedef struct{
     void* custom_data;                                      // custom data for different values.
@@ -31,8 +28,8 @@ typedef struct{
     VERB_type_t* type;                                      // type of variable.
     VERB_variable_token_t type_name;                        // name (token) of type.
     VERB_variable_token_t name;                             // name (token) of variable.
-    VERB_variable_definition_groups_t group;
-    VERB_variable_definition_flags_t flags;                 // data about operations valid on type.
-} VERB_variable_definition_t;
+    VERB_variable__groups_t group;
+    VERB_variable__flags_t flags;
+} VERB_variable_t;
 
 #endif

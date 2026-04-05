@@ -9,14 +9,14 @@
 // I'm using blake2s because of it's speed, ease-of-use (literally 1 function), permissive licence & portability.
 // why blake2s and not blake2b? so it runs better on 32-bit machines; the speed gained from blake2b doesn't matter when considering how slow everything else is.
 
-#include "endonce.h"
+#include "end/endonce.h"
 #include "_includes.h"
 #include "../../../libraries/BLAKE2s/blake2s.c"             // relevant hash function
 
 #define VERB_PREPROCESSOR_HASH_SIZE 32
 
 // checks that we haven't met H(code between #once and #endonce or \00) yet.
-VERB_token_t VERB_preprocessor_op_once(char* restrict* const restrict string, VERB_tokeniser_t* const restrict tokeniser){
+void VERB_preprocessor_op_once(char* restrict* const restrict string, VERB_tokeniser_t* const restrict tokeniser){
     char* const endonce_pos = VERB_preprocessor_skip_endonce(string, tokeniser);
 
     const size_t len = (size_t)(endonce_pos - *string);
@@ -25,8 +25,6 @@ VERB_token_t VERB_preprocessor_op_once(char* restrict* const restrict string, VE
 
     if(VERB_rht_search_and_put(tokeniser->preprocessor->once_included, hash, NULL, NULL, len, VERB_rht_destroy_none))
         *string = endonce_pos;
-
-    return VERB_TOKEN_special_IGNORE;
 }
 
 #endif

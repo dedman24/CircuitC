@@ -3,23 +3,33 @@
 
 // include this to include all preprocessor operations
 
-#include "include.h"        // #include and #include "..." as ..."
-#include "undef.h"          // #undef
-#include "ifdef.h"          // #ifdef
-#include "ifndef.h"         // #ifndef
-#include "endif.h"          // #endif
-#include "else.h"           // #else
-#include "define.h"         // #define
-#include "once.h"           // #once
-#include "endonce.h"        // #endonce
-#include "error.h"          // #error
-#include "warning.h"        // #warning
-#include "module.h"         // #module
-#include "endmodule.h"      // #endmodule
-#include "embed.h"          // #embed (TODO: FINISH!)
+#include "conditions/if.h"                      // #if
+#include "conditions/else.h"                    // #else
+#include "conditions/ifdef.h"                   // #ifdef
+#include "conditions/elseif.h"                  // #elseif, #elif
+#include "conditions/ifndef.h"                  // #ifndef
 
-VERB_bytecode_t VERB_preprocessor_op_ignore(char* restrict* const restrict string, VERB_tokeniser_t* const restrict tokeniser){
-    return VERB_BC_special_IGNORE;
+#include "replacement/macro.h"                  // #macro
+#include "replacement/undef.h"                  // #undef
+#include "replacement/define.h"                 // #define
+
+#include "end/end.h"                            // #end
+#include "end/endif.h"                          // #endif
+#include "end/endonce.h"                        // #endonce
+#include "end/endmacro.h"                       // #endmacro
+#include "end/endmodule.h"                      // #endmodule
+
+#include "msges/errors.h"                       // #error
+#include "msges/warning.h"                      // #warning
+
+#include "once.h"                               // #once
+#include "module.h"                             // #module
+#include "include.h"                            // #include
+
+#include "embed.h"                              // #embed (TODO: FINISH!
+
+void VERB_preprocessor_op_ignore(char* restrict* const restrict string, VERB_tokeniser_t* const restrict tokeniser){
+    return;
 }
 
 #endif

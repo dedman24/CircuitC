@@ -4,21 +4,38 @@
 #include "backend.h"
 #include "stdbool.h"                                                // for boolean type.
 #include "tokeniser_type.h"
-#include "../../../libraries/dynamic_arrays.h"
+#include "../../../libraries/arrays/dynamic_arrays.h"
 #include "../../../libraries/errors_warnings/errors_warnings.h"     // for error handling type.
 #include "../../preprocessor/preprocessor_ctx.h"
 
+// do NOT change the values of these!
 typedef enum{
-    VERB_tokeniser_scope_state_none                             = 0,
-    VERB_tokeniser_scope_state_after_newline                    = 1,
-    VERB_tokeniser_scope_state_after_period                     = 2,
-    VERB_tokeniser_scope_state_after_newline_and_period         = 3
-} VERB_tokeniser_scope_state_t;
+    VERB_tokeniser_state_none                               = 0,
+    VERB_tokeniser_state_scope_after_newline                = 1,
+    VERB_tokeniser_state_scope_after_period                 = 2,
+    VERB_tokeniser_state_scope_after_newline_and_period     = 3,
+    VERB_tokeniser_state_after_operator                     = 4,
+    VERB_tokeniser_state_priv                               = 8,
+} VERB_tokeniser_state_t;
 
-#define VERB_tokeniser_scope_state_change(tokeniser, new_state)             \
+#define VERB_TOKENISER_STATE_SCOPE_MASK (VERB_tokeniser_state_scope_after_newline | VERB_tokeniser_state_scope_after_period)
+
+#define VERB_tokeniser_state_assert(tokeniser, new_state)                   \
     do{                                                                     \
-        (tokeniser)->scope_state |= (new_state);                            \
+        (tokeniser)->state |= (new_state);                                  \
     } while(0)
+
+#define VERB_tokeniser_state_toggle(tokeniser, new_state)                   \
+    do{                                                                     \
+        (tokeniser)->state ^= (new_state);                                  \
+    } while(0)
+
+#define VERB_tokeniser_state_remove(tokeniser, new_state)                   \
+    do{                                                                     \
+        (tokeniser)->state &= ~(new_state);                                 \
+    } while(0)
+
+#define VERB_tokeniser_state_check(tokeniser, tocheck) ((tokeniser)->state & (tocheck))
 
 // persistent data that has to be tracked when tokenising other files recursively.
 typedef struct{
@@ -29,7 +46,7 @@ typedef struct{
 // RESULTION OF SCOPES
     unsigned int old_whitespace_cnt;            // scoping depth of previous line.
     unsigned int new_whitespace_cnt;            // scoping depth of this line.
-    VERB_tokeniser_scope_state_t scope_state;   // if other non-whitespace characters (comments not counting) have been met.
+    VERB_tokeniser_state_t state;               // state of tokeniser.
 } VERB_tokeniser_persistent_data_t;
 
 // all tokens
@@ -39,7 +56,10 @@ struct VERB_tokeniser {
     VERB_tree_bytecode_t* whitespaces;          // holds bst of all whitespace characters.
     VERB_preprocessor_t* preprocessor;          // holds all preprocessor statements, all macros & so on.
     VERB_array_t* code;                         // holds tokenised code.
+// handling of .
     VERB_tokeniser_backend_t backend;           // backend data.
+    VERB_array_t ops;                           // stack of all ops.
+    VERB_array_t values;                        // stack of all values.
 // PASSING/RETURNING EXTRA ARGUMENTS
     // ERROR HANDLING
     VERB_error_specifics_t* specifics;          // used to return errors and warnings.
@@ -48,10 +68,11 @@ struct VERB_tokeniser {
 // CURRENT POSITION WITHIN FILE
     unsigned long long line;                    // current line.
     unsigned long long offset;                  // offset/char num within said line.
+    unsigned int bracket_depth;
 // RESULTION OF SCOPES
     unsigned int old_whitespace_cnt;            // scoping depth of previous line.
     unsigned int new_whitespace_cnt;            // scoping depth of this line.
-    VERB_tokeniser_scope_state_t scope_state;
+    VERB_tokeniser_state_t state;
 };
 
 void VERB_tokeniser_persistent_data_populate(VERB_tokeniser_persistent_data_t* persistent, VERB_tokeniser_t* tokeniser){
@@ -63,7 +84,7 @@ void VERB_tokeniser_persistent_data_populate(VERB_tokeniser_persistent_data_t* p
 
     persistent->old_whitespace_cnt = tokeniser->old_whitespace_cnt;
     persistent->new_whitespace_cnt = tokeniser->new_whitespace_cnt;
-    persistent->scope_state = tokeniser->scope_state;
+    persistent->state = tokeniser->state;
 }
 
 // VERB_tree_destroy(tokeniser->preprocessor->modules, VERB_tree_keep_key); HAS to be called externally.
@@ -76,7 +97,7 @@ void VERB_tokeniser_persistent_data_depopulate(VERB_tokeniser_t* tokeniser, VERB
 
     tokeniser->old_whitespace_cnt = persistent->old_whitespace_cnt;
     tokeniser->new_whitespace_cnt = persistent->new_whitespace_cnt;
-    tokeniser->scope_state = persistent->scope_state;
+    tokeniser->state = persistent->state;
 }
 
 #endif
