@@ -8,6 +8,7 @@ May the Lord help me.
 Preprocessing and code generation to bytecode happens in a single pass; this means the compiler does not generate any intermediate files in which it expands macros, or any AST, nor does it tokenise the source code (not anymore).\
 I did this because I thought it would be cool. I also didn't need an AST or any intermediate result file (so far, might change since I'm still so early on in the development).
 #### VERB BYTECODE
-VERB uses its own bytecode, which is based on dataflow machines. The end result is SSA with a different coat of paint. 
+VERB uses its own bytecode, which is based on dataflow machines. The end result is SSA with different names for some instructions (phi -> pick).\
+The dataflow machine is based on the work done by Arvind and David E. Culler in their publication "[Dataflow Architectures](https://dspace.mit.edu/handle/1721.1/149103)".
 ## LANGUAGE ITSELF
 WIP.
